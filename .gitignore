@@ -37,3 +37,6 @@ ENV/
 
 # Logs
 *.log
+
+# Test cases
+test_cases.db

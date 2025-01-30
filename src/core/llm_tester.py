@@ -3,10 +3,12 @@ from typing import List
 import os
 import json
 from ..models.test_models import TestCase, TestResult
+from ..utils.db_manager import TestCaseDB
 
 
 class LLMTester:
-    def __init__(self, rule: str, offender: str, defender: str, judge: str):
+    def __init__(self, test_name: str, rule: str, offender: str, defender: str, judge: str):
+        self.test_name = test_name
         self.rule = rule
         self.offender = offender
         self.defender = defender
@@ -16,6 +18,7 @@ class LLMTester:
             base_url="https://api.clod.io/v1",
         )
         self.previous_prompts = []  # Store previous prompts
+        self.db = TestCaseDB()
 
     def generate_test_pairs(self, num_pairs: int) -> List[TestCase]:
         """Generate multiple test pairs in a single API call"""
@@ -91,6 +94,9 @@ class LLMTester:
                         should_pass=False
                     )
                 ])
+
+            # Store test cases in database right after generation
+            self.db.store_test_cases(self.test_name, test_cases)
 
             return test_cases
 

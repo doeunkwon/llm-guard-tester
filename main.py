@@ -1,4 +1,4 @@
-from src.testers.llm_tester import LLMTester
+from src.core.llm_tester import LLMTester
 from src.utils.display import display_results
 
 
@@ -16,6 +16,7 @@ def main():
 
     # Initialize the tester with appropriate models
     tester = LLMTester(
+        test_name="S9",
         rule=rule,
         offender="gpt-4o",
         defender="Llama-3.1-8b",
