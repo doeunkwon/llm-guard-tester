@@ -10,4 +10,4 @@ class TestResult(BaseModel):
     prompt: str
     should_pass: bool
     llm_response: str
-    passed_judgment: bool
+    passed_judgment: bool | None = None
