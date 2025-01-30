@@ -41,21 +41,45 @@ class TestCaseDB:
         except Exception as e:
             print(f"Error storing test cases: {str(e)}")
 
-    def get_test_cases(self, test_name: str = None) -> List[dict]:
-        """Retrieve test cases from the database"""
+    def get_test_cases(self, test_name: str = None, max_results: int = None) -> List[TestCase]:
+        """Retrieve test cases from the database
+
+        Args:
+            test_name: Optional filter by test name
+            max_results: Optional maximum number of test cases to return for EACH should_pass value.
+                        Total returned cases will be up to 2 * max_results (half passing, half failing)
+        """
         try:
             with sqlite3.connect(self.test_cases_path) as conn:
                 cursor = conn.cursor()
-                if test_name:
-                    cursor.execute('''
-                        SELECT * FROM test_cases WHERE test_name = ?
-                    ''', (test_name,))
-                else:
-                    cursor.execute('SELECT * FROM test_cases')
 
+                # Base query with test_name filter if provided
+                test_name_condition = "WHERE test_name = ?" if test_name else ""
+                params = (test_name,) if test_name else ()
+
+                # Get both passing and failing cases separately
+                query = f'''
+                    SELECT * FROM (
+                        SELECT * FROM test_cases 
+                        {test_name_condition}
+                        {"WHERE" if not test_name else "AND"} should_pass = TRUE
+                        ORDER BY RANDOM()
+                        {f"LIMIT {max_results}" if max_results else ""}
+                    )
+                    UNION ALL
+                    SELECT * FROM (
+                        SELECT * FROM test_cases 
+                        {test_name_condition}
+                        {"WHERE" if not test_name else "AND"} should_pass = FALSE
+                        ORDER BY RANDOM()
+                        {f"LIMIT {max_results}" if max_results else ""}
+                    )
+                '''
+
+                cursor.execute(query, params * 2 if test_name else ())
                 columns = [description[0]
                            for description in cursor.description]
-                return [dict(zip(columns, row)) for row in cursor.fetchall()]
+                return [TestCase(**dict(zip(columns, row))) for row in cursor.fetchall()]
         except Exception as e:
             print(f"Error retrieving test cases: {str(e)}")
             return []
