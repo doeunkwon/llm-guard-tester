@@ -7,9 +7,9 @@ def main():
     technique = EnhancementTechnique.CODING_TASKS
 
     # Create enhancer for this technique
-    enhancer = Enhancer(technique)
+    enhancer = Enhancer()
 
-    enhancer.enhance()
+    enhancer.enhance(technique)
 
 
 if __name__ == "__main__":

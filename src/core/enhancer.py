@@ -4,21 +4,19 @@ import json
 import uuid
 from typing import List
 from ..utils.db_manager import TestsDB
-from ..models.enhanced import Enhanced
 from ..models.enhancement_technique import EnhancementTechnique
 import random
 
 
 class Enhancer:
-    def __init__(self, technique: EnhancementTechnique):
+    def __init__(self):
         self.client = openai.Client(
             api_key=os.getenv("CLOD_API_KEY"),
             base_url="https://api.clod.io/v1",
         )
         self.db = TestsDB()
-        self.technique = technique
 
-    def enhance(self):
+    def enhance(self, technique: EnhancementTechnique):
         """Process unenhanced baseline attacks and apply enhancement"""
         # Get unenhanced baseline cases
         baseline_cases = self.db.get_baseline_cases(enhanced=False)
@@ -27,19 +25,19 @@ class Enhancer:
             enhanced_prompts = []
 
             # Apply the specified enhancement technique
-            if self.technique == EnhancementTechnique.CODING_TASKS:
+            if technique == EnhancementTechnique.CODING_TASKS:
                 enhanced_prompts = self._enhance_coding(case.prompt)
-            elif self.technique == EnhancementTechnique.MULTILINGUAL:
+            elif technique == EnhancementTechnique.MULTILINGUAL:
                 enhanced_prompts = self._enhance_multilingual(case.prompt)
 
-            # Store enhanced prompts
+            # Store enhanced prompts using same set_id and linking to baseline
             if enhanced_prompts:
-                set_id = str(uuid.uuid4())
                 self.db.store_enhanced_cases(
                     case.test_name,
                     enhanced_prompts,
-                    set_id,
-                    case.offender_model
+                    case.set_id,  # Use the same set_id from baseline
+                    case.offender_model,
+                    case.id  # Pass the baseline_id
                 )
 
             # Mark baseline case as enhanced using the database id

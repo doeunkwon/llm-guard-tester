@@ -2,7 +2,7 @@ import openai
 import json
 import os
 import uuid
-from ..models.test_case import TestCaseInput
+from ..models.test_case import TestCase
 from ..utils.db_manager import TestsDB
 
 
@@ -66,7 +66,7 @@ class Generator:
 
             json_response = json.loads(response.choices[0].message.content)
             test_cases = [
-                TestCaseInput(
+                TestCase(
                     test_name=test_name,
                     prompt=case['prompt'],
                     offender_model=offender_model
@@ -135,7 +135,7 @@ class Generator:
 
             json_response = json.loads(response.choices[0].message.content)
             test_cases = [
-                TestCaseInput(
+                TestCase(
                     test_name=test_name,
                     prompt=case['prompt'],
                     offender_model=offender_model

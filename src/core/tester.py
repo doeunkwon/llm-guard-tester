@@ -21,7 +21,6 @@ class Tester:
                 messages=[
                     {"role": "user", "content": prompt}
                 ],
-                max_tokens=50
             )
             return response.choices[0].message.content
         except Exception as e:

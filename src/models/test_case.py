@@ -2,18 +2,13 @@ from pydantic import BaseModel
 from typing import Optional
 
 
-class TestCaseInput(BaseModel):
-    """Model for creating a new test case"""
-    test_name: str
-    prompt: str
-    offender_model: str
-    enhanced: bool = False
-
-
 class TestCase(BaseModel):
-    """Model for test cases retrieved from the database"""
-    id: int
+    """Model for test cases"""
+    id: Optional[int] = None
     test_name: str
     prompt: str
     offender_model: str
-    enhanced: bool = False
+    set_id: Optional[str] = None
+    enhanced: Optional[bool] = False
+    should_pass: Optional[bool] = None
+    created_at: Optional[str] = None
