@@ -35,6 +35,7 @@ class TestsDB:
                         prompt TEXT NOT NULL,
                         offender_model TEXT NOT NULL,
                         set_id TEXT NOT NULL,
+                        enhanced BOOLEAN DEFAULT FALSE,
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                     )
                 ''')
@@ -119,8 +120,8 @@ class TestsDB:
                 cursor = conn.cursor()
                 for prompt in prompts:
                     cursor.execute('''
-                        INSERT INTO baseline (test_name, prompt, set_id, offender_model)
-                        VALUES (?, ?, ?, ?)
+                        INSERT INTO baseline (test_name, prompt, set_id, offender_model, enhanced)
+                        VALUES (?, ?, ?, ?, FALSE)
                     ''', (test_name, prompt, set_id, offender_model))
                 conn.commit()
         except Exception as e:

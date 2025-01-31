@@ -40,3 +40,10 @@ ENV/
 
 # Test cases
 tester.db
+
+# macOS system files
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
