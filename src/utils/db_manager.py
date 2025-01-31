@@ -208,7 +208,7 @@ class TestsDB:
                     params.append(enhanced)
 
                 query = f'''
-                    SELECT *, FALSE as should_pass FROM baseline 
+                    SELECT * FROM baseline 
                     {f"WHERE {' AND '.join(conditions)}" if conditions else ""}
                     ORDER BY RANDOM()
                     {f"LIMIT {limit}" if limit else ""}
@@ -223,6 +223,36 @@ class TestsDB:
 
         except Exception as e:
             print(f"Error retrieving baseline cases: {str(e)}")
+            return []
+
+    def get_enhanced_cases(self, test_name: str = None, limit: int = None) -> List[TestCase]:
+        """Retrieve test cases from enhanced table"""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+
+                conditions = []
+                params = []
+                if test_name:
+                    conditions.append("test_name = ?")
+                    params.append(test_name)
+
+                query = f'''
+                    SELECT * FROM enhanced 
+                    {f"WHERE {' AND '.join(conditions)}" if conditions else ""}
+                    ORDER BY RANDOM()
+                    {f"LIMIT {limit}" if limit else ""}
+                '''
+
+                cursor.execute(query, params)
+                rows = cursor.fetchall()
+                columns = [description[0]
+                           for description in cursor.description]
+
+                return [TestCase(**dict(zip(columns, row))) for row in rows]
+
+        except Exception as e:
+            print(f"Error retrieving enhanced cases: {str(e)}")
             return []
 
     def get_test_results(self, test_name: str) -> List[dict]:

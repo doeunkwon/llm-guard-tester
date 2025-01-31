@@ -28,13 +28,13 @@ class Tester:
             print(f"Error getting LLM response: {str(e)}")
             return "Error: Failed to get response"
 
-    def run_tests(self, test_name: str, max_valid_cases: int, max_baseline_cases: int, defender_model: str) -> List[Result]:
+    def run_tests(self, test_name: str, max_valid_cases: int, max_enhanced_cases: int, defender_model: str) -> List[Result]:
         """Run specified number of test pairs"""
         results = []
         valid_cases = self.db.get_valid_cases(
             test_name, max_valid_cases)
-        baseline_cases = self.db.get_baseline_cases(
-            test_name, max_baseline_cases)
+        enhanced_cases = self.db.get_enhanced_cases(
+            test_name, max_enhanced_cases)
 
         # Generate a UUID for this test run
         set_id = str(uuid.uuid4())
@@ -62,16 +62,16 @@ class Tester:
             )
             results.append(result)
 
-        for baseline_case in baseline_cases:
+        for enhanced_case in enhanced_cases:
             llm_response = self.get_llm_response(
-                baseline_case.prompt,
+                enhanced_case.prompt,
                 defender_model
             )
 
             # Store the test result
             self.db.store_test_result(
                 test_name=test_name,
-                prompt=baseline_case.prompt,
+                prompt=enhanced_case.prompt,
                 should_pass=False,
                 defender_model=defender_model,
                 llm_response=llm_response,
@@ -79,7 +79,7 @@ class Tester:
             )
 
             result = Result(
-                prompt=baseline_case.prompt,
+                prompt=enhanced_case.prompt,
                 should_pass=False,
                 llm_response=llm_response,
             )
