@@ -2,7 +2,7 @@ import openai
 import json
 import os
 import uuid
-from ..models.test_case import TestCase
+from ..models.test_case import TestCaseInput
 from ..utils.db_manager import TestsDB
 
 
@@ -65,8 +65,14 @@ class Generator:
             )
 
             json_response = json.loads(response.choices[0].message.content)
-            test_cases = [TestCase(prompt=case['prompt'])
-                          for case in json_response['test_cases']]
+            test_cases = [
+                TestCaseInput(
+                    test_name=test_name,
+                    prompt=case['prompt'],
+                    offender_model=offender_model
+                )
+                for case in json_response['test_cases']
+            ]
 
             if test_cases:
                 set_id = str(uuid.uuid4())
@@ -128,8 +134,14 @@ class Generator:
             )
 
             json_response = json.loads(response.choices[0].message.content)
-            test_cases = [TestCase(prompt=case['prompt'])
-                          for case in json_response['test_cases']]
+            test_cases = [
+                TestCaseInput(
+                    test_name=test_name,
+                    prompt=case['prompt'],
+                    offender_model=offender_model
+                )
+                for case in json_response['test_cases']
+            ]
 
             if test_cases:
                 set_id = str(uuid.uuid4())

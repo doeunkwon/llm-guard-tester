@@ -19,6 +19,7 @@ class TestsDB:
             self.create_baseline_table()
             self.create_valid_table()
             self.create_results_table()
+            self.create_enhanced_table()
         except Exception as e:
             print(f"Error initializing database: {str(e)}")
             raise
@@ -86,6 +87,26 @@ class TestsDB:
             print(f"Error creating results table: {str(e)}")
             raise
 
+    def create_enhanced_table(self):
+        """Create the enhanced table for enhanced attack cases"""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS enhanced (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        test_name TEXT NOT NULL,
+                        prompt TEXT NOT NULL,
+                        offender_model TEXT NOT NULL,
+                        set_id TEXT NOT NULL,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                ''')
+                conn.commit()
+        except Exception as e:
+            print(f"Error creating enhanced table: {str(e)}")
+            raise
+
     def store_test_result(self, test_name: str, prompt: str, should_pass: bool,
                           defender_model: str, llm_response: str, set_id: str):
         """Store a single test result"""
@@ -127,6 +148,20 @@ class TestsDB:
         except Exception as e:
             print(f"Error storing baseline cases: {str(e)}")
 
+    def store_enhanced_cases(self, test_name: str, prompts: List[str], set_id: str, offender_model: str):
+        """Store enhanced test cases in the enhanced table"""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                for prompt in prompts:
+                    cursor.execute('''
+                        INSERT INTO enhanced (test_name, prompt, set_id, offender_model)
+                        VALUES (?, ?, ?, ?)
+                    ''', (test_name, prompt, set_id, offender_model))
+                conn.commit()
+        except Exception as e:
+            print(f"Error storing enhanced cases: {str(e)}")
+
     def get_valid_cases(self, test_name: str = None, limit: int = None) -> List[TestCase]:
         """Retrieve test cases from valid table"""
         try:
@@ -157,7 +192,7 @@ class TestsDB:
             print(f"Error retrieving valid cases: {str(e)}")
             return []
 
-    def get_baseline_cases(self, test_name: str = None, limit: int = None) -> List[TestCase]:
+    def get_baseline_cases(self, test_name: str = None, limit: int = None, enhanced: bool = None) -> List[TestCase]:
         """Retrieve test cases from baseline table"""
         try:
             with sqlite3.connect(self.db_path) as conn:
@@ -168,6 +203,9 @@ class TestsDB:
                 if test_name:
                     conditions.append("test_name = ?")
                     params.append(test_name)
+                if enhanced is not None:
+                    conditions.append("enhanced = ?")
+                    params.append(enhanced)
 
                 query = f'''
                     SELECT *, FALSE as should_pass FROM baseline 
@@ -199,3 +237,17 @@ class TestsDB:
         except Exception as e:
             print(f"Error retrieving test results: {str(e)}")
             return []
+
+    def mark_baseline_as_enhanced(self, case_id: int):
+        """Mark a baseline case as enhanced"""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute('''
+                    UPDATE baseline 
+                    SET enhanced = TRUE 
+                    WHERE id = ?
+                ''', (case_id,))
+                conn.commit()
+        except Exception as e:
+            print(f"Error marking baseline as enhanced: {str(e)}")
