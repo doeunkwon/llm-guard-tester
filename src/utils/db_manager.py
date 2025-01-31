@@ -110,45 +110,63 @@ class TestCaseDB:
         except Exception as e:
             print(f"Error storing test cases: {str(e)}")
 
-    def get_test_cases(self, test_name: str = None, max_results: int = None) -> List[TestCase]:
+    def get_test_cases(self, test_name: str = None, success_cases: int = None, failure_cases: int = None) -> List[TestCase]:
         """Retrieve test cases from the database
 
         Args:
             test_name: Optional filter by test name
-            max_results: Optional maximum number of test cases to return for EACH should_pass value.
-                        Total returned cases will be up to 2 * max_results (half passing, half failing)
+            success_cases: Optional maximum number of success cases to return
+            failure_cases: Optional maximum number of failure cases to return
         """
         try:
             with sqlite3.connect(self.db_path) as conn:
                 cursor = conn.cursor()
 
-                # Base query with test_name filter if provided
-                test_name_condition = "WHERE test_name = ?" if test_name else ""
-                params = (test_name,) if test_name else ()
+                # Build base conditions
+                conditions = []
+                params = []
+                if test_name:
+                    conditions.append("test_name = ?")
+                    params.append(test_name)
 
-                # Get both passing and failing cases separately
-                query = f'''
-                    SELECT * FROM (
-                        SELECT * FROM test_cases 
-                        {test_name_condition}
-                        {"WHERE" if not test_name else "AND"} should_pass = TRUE
-                        ORDER BY RANDOM()
-                        {f"LIMIT {max_results}" if max_results else ""}
-                    )
-                    UNION ALL
-                    SELECT * FROM (
-                        SELECT * FROM test_cases 
-                        {test_name_condition}
-                        {"WHERE" if not test_name else "AND"} should_pass = FALSE
-                        ORDER BY RANDOM()
-                        {f"LIMIT {max_results}" if max_results else ""}
-                    )
+                # Get success cases
+                success_query = f'''
+                    SELECT * FROM test_cases 
+                    WHERE should_pass = TRUE
+                    {f"AND {' AND '.join(conditions)}" if conditions else ""}
+                    ORDER BY RANDOM()
+                    {f"LIMIT {success_cases}" if success_cases else ""}
                 '''
 
-                cursor.execute(query, params * 2 if test_name else ())
+                # Get failure cases
+                failure_query = f'''
+                    SELECT * FROM test_cases 
+                    WHERE should_pass = FALSE
+                    {f"AND {' AND '.join(conditions)}" if conditions else ""}
+                    ORDER BY RANDOM()
+                    {f"LIMIT {failure_cases}" if failure_cases else ""}
+                '''
+
+                # Execute both queries and combine results
+                cursor.execute(success_query, params)
+                success_rows = cursor.fetchall()
+
+                cursor.execute(failure_query, params)
+                failure_rows = cursor.fetchall()
+
+                # Get column names
                 columns = [description[0]
                            for description in cursor.description]
-                return [TestCase(**dict(zip(columns, row))) for row in cursor.fetchall()]
+
+                # Convert rows to TestCase objects
+                all_cases = []
+                all_cases.extend([TestCase(**dict(zip(columns, row)))
+                                 for row in success_rows])
+                all_cases.extend([TestCase(**dict(zip(columns, row)))
+                                 for row in failure_rows])
+
+                return all_cases
+
         except Exception as e:
             print(f"Error retrieving test cases: {str(e)}")
             return []

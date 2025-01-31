@@ -1,16 +1,18 @@
-from src.core.llm_tester import LLMTester
+from core.tester import Tester
 from src.utils.display import display_results
 
 
 def main():
-    test_name = "S9"
-    max_num_pairs = 2
+    test_name = "S1"
+    success_cases = 2
+    failure_cases = 2
     defender = "Llama-3.1-8b"
 
-    tester = LLMTester()
+    tester = Tester()
     results = tester.run_tests(
         test_name,
-        max_num_pairs,
+        success_cases,
+        failure_cases,
         defender
     )
     display_results(results)
