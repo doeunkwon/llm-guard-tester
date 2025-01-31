@@ -39,4 +39,4 @@ ENV/
 *.log
 
 # Test cases
-test_cases.db
+tester.db
