@@ -33,6 +33,8 @@ class TestCaseDB:
                         test_name TEXT NOT NULL,
                         prompt TEXT NOT NULL,
                         should_pass BOOLEAN NOT NULL,
+                        offender_model TEXT NOT NULL,
+                        set_id TEXT NOT NULL,
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                     )
                 ''')
@@ -42,21 +44,19 @@ class TestCaseDB:
             raise
 
     def create_results_table(self):
-        """Create the results table if it doesn't exist, dropping any existing table"""
+        """Create the results table if it doesn't exist"""
         try:
             with sqlite3.connect(self.db_path) as conn:
                 cursor = conn.cursor()
-                # Drop existing table if it exists
-                cursor.execute('DROP TABLE IF EXISTS results')
-
                 cursor.execute('''
-                    CREATE TABLE results (
+                    CREATE TABLE IF NOT EXISTS results (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         test_name TEXT NOT NULL,
                         prompt TEXT NOT NULL,
                         should_pass BOOLEAN NOT NULL,
                         defender_model TEXT NOT NULL,
                         llm_response TEXT NOT NULL,
+                        set_id TEXT NOT NULL,
                         timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
                     )
                 ''')
@@ -66,15 +66,15 @@ class TestCaseDB:
             raise
 
     def store_test_result(self, test_name: str, prompt: str, should_pass: bool,
-                          defender_model: str, llm_response: str):
+                          defender_model: str, llm_response: str, set_id: str):
         """Store a single test result"""
         try:
             with sqlite3.connect(self.db_path) as conn:
                 conn.execute('''
                     INSERT INTO results
-                    (test_name, prompt, should_pass, defender_model, llm_response)
-                    VALUES (?, ?, ?, ?, ?)
-                ''', (test_name, prompt, should_pass, defender_model, llm_response))
+                    (test_name, prompt, should_pass, defender_model, llm_response, set_id)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                ''', (test_name, prompt, should_pass, defender_model, llm_response, set_id))
         except Exception as e:
             print(f"Error storing test result: {str(e)}")
 
@@ -91,16 +91,16 @@ class TestCaseDB:
             print(f"Error retrieving test results: {str(e)}")
             return []
 
-    def store_test_cases(self, test_name: str, test_cases: List[TestCase]):
+    def store_test_cases(self, test_name: str, test_cases: List[TestCase], set_id: str, offender_model: str):
         """Store test cases in the SQLite database"""
         try:
             with sqlite3.connect(self.db_path) as conn:
                 cursor = conn.cursor()
                 for test_case in test_cases:
                     cursor.execute('''
-                        INSERT INTO baseline (test_name, prompt, should_pass)
-                        VALUES (?, ?, ?)
-                    ''', (test_name, test_case.prompt, test_case.should_pass))
+                        INSERT INTO baseline (test_name, prompt, should_pass, set_id, offender_model)
+                        VALUES (?, ?, ?, ?, ?)
+                    ''', (test_name, test_case.prompt, test_case.should_pass, set_id, offender_model))
                 conn.commit()
         except Exception as e:
             print(f"Error storing test cases: {str(e)}")

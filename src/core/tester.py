@@ -1,5 +1,6 @@
 import openai
 import os
+import uuid
 from typing import List
 from ..models.test_models import TestResult
 from ..utils.db_manager import TestCaseDB
@@ -33,8 +34,8 @@ class Tester:
         test_cases = self.db.get_test_cases(
             test_name, max_success_cases, max_failure_cases)
 
-        # Create fresh results table for this test run
-        self.db.create_results_table()
+        # Generate a UUID for this test run
+        set_id = str(uuid.uuid4())
 
         for test_case in test_cases:
             llm_response = self.get_llm_response(
@@ -48,7 +49,8 @@ class Tester:
                 prompt=test_case.prompt,
                 should_pass=test_case.should_pass,
                 defender_model=defender_model,
-                llm_response=llm_response
+                llm_response=llm_response,
+                set_id=set_id
             )
 
             result = TestResult(

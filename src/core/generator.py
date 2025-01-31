@@ -1,6 +1,7 @@
 import openai
 import json
 import os
+import uuid
 from ..models.test_models import TestCase
 from ..utils.db_manager import TestCaseDB
 
@@ -68,7 +69,9 @@ class Generator:
                           for case in json_response['test_cases']]
 
             if test_cases:
-                self.db.store_test_cases(test_name, test_cases)
+                set_id = str(uuid.uuid4())
+                self.db.store_test_cases(
+                    test_name, test_cases, set_id, offender_model)
         except Exception as e:
             print(f"Error generating success cases: {str(e)}")
             return []
@@ -128,7 +131,9 @@ class Generator:
                           for case in json_response['test_cases']]
 
             if test_cases:
-                self.db.store_test_cases(test_name, test_cases)
+                set_id = str(uuid.uuid4())
+                self.db.store_test_cases(
+                    test_name, test_cases, set_id, offender_model)
         except Exception as e:
             print(f"Error generating failure cases: {str(e)}")
             return []

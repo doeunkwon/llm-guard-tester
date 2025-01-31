@@ -6,7 +6,7 @@ def main():
     test_name = "S2"
     max_success_cases = 2
     max_failure_cases = 2
-    defender = "Llama-3.1-8b"
+    defender = "gemini-1.5-flash"
 
     tester = Tester()
     results = tester.run_tests(
