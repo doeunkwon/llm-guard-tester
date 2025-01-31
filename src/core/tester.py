@@ -2,8 +2,8 @@ import openai
 import os
 import uuid
 from typing import List
-from ..models.test_models import TestResult
-from ..utils.db_manager import TestCaseDB
+from ..models.test_models import Result
+from ..utils.db_manager import TestsDB
 
 
 class Tester:
@@ -12,7 +12,7 @@ class Tester:
             api_key=os.getenv("CLOD_API_KEY"),
             base_url="https://api.clod.io/v1",
         )
-        self.db = TestCaseDB()
+        self.db = TestsDB()
 
     def get_llm_response(self, prompt: str, defender_model: str) -> str:
         try:
@@ -28,7 +28,7 @@ class Tester:
             print(f"Error getting LLM response: {str(e)}")
             return "Error: Failed to get response"
 
-    def run_tests(self, test_name: str, max_success_cases: int, max_failure_cases: int, defender_model: str) -> List[TestResult]:
+    def run_tests(self, test_name: str, max_success_cases: int, max_failure_cases: int, defender_model: str) -> List[Result]:
         """Run specified number of test pairs"""
         results = []
         test_cases = self.db.get_test_cases(
@@ -53,7 +53,7 @@ class Tester:
                 set_id=set_id
             )
 
-            result = TestResult(
+            result = Result(
                 prompt=test_case.prompt,
                 should_pass=test_case.should_pass,
                 llm_response=llm_response,

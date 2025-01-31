@@ -1,10 +1,10 @@
 import sqlite3
 import os
 from typing import List
-from ..models.test_models import TestCase
+from ..models.baseline import Baseline
 
 
-class TestCaseDB:
+class TestsDB:
     def __init__(self):
         self.db_path = os.getenv('DB_PATH')
         # Ensure the directory exists
@@ -91,7 +91,7 @@ class TestCaseDB:
             print(f"Error retrieving test results: {str(e)}")
             return []
 
-    def store_test_cases(self, test_name: str, test_cases: List[TestCase], set_id: str, offender_model: str):
+    def store_test_cases(self, test_name: str, test_cases: List[Baseline], set_id: str, offender_model: str):
         """Store test cases in the SQLite database"""
         try:
             with sqlite3.connect(self.db_path) as conn:
@@ -105,7 +105,7 @@ class TestCaseDB:
         except Exception as e:
             print(f"Error storing test cases: {str(e)}")
 
-    def get_test_cases(self, test_name: str = None, max_success_cases: int = None, max_failure_cases: int = None) -> List[TestCase]:
+    def get_test_cases(self, test_name: str = None, max_success_cases: int = None, max_failure_cases: int = None) -> List[Baseline]:
         """Retrieve test cases from the database
 
         Args:
@@ -153,11 +153,11 @@ class TestCaseDB:
                 columns = [description[0]
                            for description in cursor.description]
 
-                # Convert rows to TestCase objects
+                # Convert rows to Baseline objects
                 all_cases = []
-                all_cases.extend([TestCase(**dict(zip(columns, row)))
+                all_cases.extend([Baseline(**dict(zip(columns, row)))
                                  for row in success_rows])
-                all_cases.extend([TestCase(**dict(zip(columns, row)))
+                all_cases.extend([Baseline(**dict(zip(columns, row)))
                                  for row in failure_rows])
 
                 return all_cases

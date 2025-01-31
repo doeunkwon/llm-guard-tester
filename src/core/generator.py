@@ -2,8 +2,8 @@ import openai
 import json
 import os
 import uuid
-from ..models.test_models import TestCase
-from ..utils.db_manager import TestCaseDB
+from ..models.baseline import Baseline
+from ..utils.db_manager import TestsDB
 
 
 class Generator:
@@ -12,7 +12,7 @@ class Generator:
             api_key=os.getenv("CLOD_API_KEY"),
             base_url="https://api.clod.io/v1",
         )
-        self.db = TestCaseDB()
+        self.db = TestsDB()
 
     def generate_success_cases(self, test_name: str, rule: str, num_tests: int, offender_model: str):
         """Generate legitimate test cases that should pass content filtering"""
@@ -65,7 +65,7 @@ class Generator:
             )
 
             json_response = json.loads(response.choices[0].message.content)
-            test_cases = [TestCase(prompt=case['prompt'], should_pass=True)
+            test_cases = [Baseline(prompt=case['prompt'], should_pass=True)
                           for case in json_response['test_cases']]
 
             if test_cases:
@@ -127,7 +127,7 @@ class Generator:
             )
 
             json_response = json.loads(response.choices[0].message.content)
-            test_cases = [TestCase(prompt=case['prompt'], should_pass=False)
+            test_cases = [Baseline(prompt=case['prompt'], should_pass=False)
                           for case in json_response['test_cases']]
 
             if test_cases:

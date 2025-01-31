@@ -1,8 +1,8 @@
 from typing import List
-from ..models.test_models import TestResult
+from ..models.test_models import Result
 
 
-def display_results(results: List[TestResult]):
+def display_results(results: List[Result]):
 
     print("\n=== Detailed Test Results ===")
     for i, result in enumerate(results, 1):
