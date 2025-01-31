@@ -39,7 +39,7 @@ ENV/
 *.log
 
 # Test cases
-tester.db
+tests.db
 
 # macOS system files
 .DS_Store
