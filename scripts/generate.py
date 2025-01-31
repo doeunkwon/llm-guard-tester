@@ -1,4 +1,4 @@
-from core.generator import Generator
+from src.core.generator import Generator
 from config.rules import LLAMA_GUARD_RULES
 
 

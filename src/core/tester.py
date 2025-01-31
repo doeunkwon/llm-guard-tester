@@ -27,14 +27,14 @@ class Tester:
             print(f"Error getting LLM response: {str(e)}")
             return "Error: Failed to get response"
 
-    def run_tests(self, test_name: str, success_cases: int, failure_cases: int, defender_model: str) -> List[TestResult]:
+    def run_tests(self, test_name: str, max_success_cases: int, max_failure_cases: int, defender_model: str) -> List[TestResult]:
         """Run specified number of test pairs"""
         results = []
         test_cases = self.db.get_test_cases(
-            test_name, success_cases, failure_cases)
+            test_name, max_success_cases, max_failure_cases)
 
         # Create fresh results table for this test run
-        self.db.create_results_table(test_name)
+        self.db.create_results_table()
 
         for test_case in test_cases:
             llm_response = self.get_llm_response(

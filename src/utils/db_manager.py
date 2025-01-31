@@ -17,17 +17,18 @@ class TestCaseDB:
             # Ensure database exists
             os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
             self.create_cases_table()
+            self.create_results_table()
         except Exception as e:
             print(f"Error initializing database: {str(e)}")
             raise
 
     def create_cases_table(self):
-        """Create the test cases table if it doesn't exist"""
+        """Create the baseline table if it doesn't exist"""
         try:
             with sqlite3.connect(self.db_path) as conn:
                 cursor = conn.cursor()
                 cursor.execute('''
-                    CREATE TABLE IF NOT EXISTS test_cases (
+                    CREATE TABLE IF NOT EXISTS baseline (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         test_name TEXT NOT NULL,
                         prompt TEXT NOT NULL,
@@ -37,25 +38,21 @@ class TestCaseDB:
                 ''')
                 conn.commit()
         except Exception as e:
-            print(f"Error creating test cases table: {str(e)}")
+            print(f"Error creating baseline table: {str(e)}")
             raise
 
-    def create_results_table(self, test_name: str):
-        """Create a fresh results table for a specific test run"""
-        table_name = f"results_{test_name}"
+    def create_results_table(self):
+        """Create the results table if it doesn't exist, dropping any existing table"""
         try:
-            # Ensure database exists
-            os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
-
             with sqlite3.connect(self.db_path) as conn:
                 cursor = conn.cursor()
-                # Drop the table if it exists
-                cursor.execute(f"DROP TABLE IF EXISTS {table_name}")
+                # Drop existing table if it exists
+                cursor.execute('DROP TABLE IF EXISTS results')
 
-                # Create new results table without test_case_id
-                cursor.execute(f'''
-                    CREATE TABLE {table_name} (
+                cursor.execute('''
+                    CREATE TABLE results (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        test_name TEXT NOT NULL,
                         prompt TEXT NOT NULL,
                         should_pass BOOLEAN NOT NULL,
                         defender_model TEXT NOT NULL,
@@ -66,31 +63,29 @@ class TestCaseDB:
                 conn.commit()
         except Exception as e:
             print(f"Error creating results table: {str(e)}")
-            # Re-raise the exception to notify the caller
             raise
 
     def store_test_result(self, test_name: str, prompt: str, should_pass: bool,
                           defender_model: str, llm_response: str):
         """Store a single test result"""
-        table_name = f"results_{test_name}"
         try:
             with sqlite3.connect(self.db_path) as conn:
-                conn.execute(f'''
-                    INSERT INTO {table_name}
-                    (prompt, should_pass, defender_model, llm_response)
-                    VALUES (?, ?, ?, ?)
-                ''', (prompt, should_pass, defender_model, llm_response))
+                conn.execute('''
+                    INSERT INTO results
+                    (test_name, prompt, should_pass, defender_model, llm_response)
+                    VALUES (?, ?, ?, ?, ?)
+                ''', (test_name, prompt, should_pass, defender_model, llm_response))
         except Exception as e:
             print(f"Error storing test result: {str(e)}")
 
     def get_test_results(self, test_name: str) -> List[dict]:
         """Get all results for a specific test"""
-        table_name = f"results_{test_name}"
         try:
             with sqlite3.connect(self.db_path) as conn:
                 conn.row_factory = sqlite3.Row
                 cursor = conn.execute(
-                    f'SELECT * FROM {table_name} ORDER BY timestamp')
+                    'SELECT * FROM results WHERE test_name = ? ORDER BY timestamp',
+                    (test_name,))
                 return [dict(row) for row in cursor.fetchall()]
         except Exception as e:
             print(f"Error retrieving test results: {str(e)}")
@@ -103,20 +98,20 @@ class TestCaseDB:
                 cursor = conn.cursor()
                 for test_case in test_cases:
                     cursor.execute('''
-                        INSERT INTO test_cases (test_name, prompt, should_pass)
+                        INSERT INTO baseline (test_name, prompt, should_pass)
                         VALUES (?, ?, ?)
                     ''', (test_name, test_case.prompt, test_case.should_pass))
                 conn.commit()
         except Exception as e:
             print(f"Error storing test cases: {str(e)}")
 
-    def get_test_cases(self, test_name: str = None, success_cases: int = None, failure_cases: int = None) -> List[TestCase]:
+    def get_test_cases(self, test_name: str = None, max_success_cases: int = None, max_failure_cases: int = None) -> List[TestCase]:
         """Retrieve test cases from the database
 
         Args:
             test_name: Optional filter by test name
-            success_cases: Optional maximum number of success cases to return
-            failure_cases: Optional maximum number of failure cases to return
+            max_success_cases: Optional maximum number of success cases to return
+            max_failure_cases: Optional maximum number of failure cases to return
         """
         try:
             with sqlite3.connect(self.db_path) as conn:
@@ -131,20 +126,20 @@ class TestCaseDB:
 
                 # Get success cases
                 success_query = f'''
-                    SELECT * FROM test_cases 
+                    SELECT * FROM baseline 
                     WHERE should_pass = TRUE
                     {f"AND {' AND '.join(conditions)}" if conditions else ""}
                     ORDER BY RANDOM()
-                    {f"LIMIT {success_cases}" if success_cases else ""}
+                    {f"LIMIT {max_success_cases}" if max_success_cases else ""}
                 '''
 
                 # Get failure cases
                 failure_query = f'''
-                    SELECT * FROM test_cases 
+                    SELECT * FROM baseline 
                     WHERE should_pass = FALSE
                     {f"AND {' AND '.join(conditions)}" if conditions else ""}
                     ORDER BY RANDOM()
-                    {f"LIMIT {failure_cases}" if failure_cases else ""}
+                    {f"LIMIT {max_failure_cases}" if max_failure_cases else ""}
                 '''
 
                 # Execute both queries and combine results
