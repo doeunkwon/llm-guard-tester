@@ -1,5 +1,5 @@
 from typing import List
-from ..models.test_models import Result
+from ..models.result import Result
 
 
 def display_results(results: List[Result]):

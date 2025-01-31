@@ -1,7 +1,7 @@
 import sqlite3
 import os
 from typing import List
-from ..models.baseline import Baseline
+from ..models.test_case import TestCase
 
 
 class TestsDB:
@@ -16,14 +16,15 @@ class TestsDB:
         try:
             # Ensure database exists
             os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
-            self.create_cases_table()
+            self.create_baseline_table()
+            self.create_valid_table()
             self.create_results_table()
         except Exception as e:
             print(f"Error initializing database: {str(e)}")
             raise
 
-    def create_cases_table(self):
-        """Create the baseline table if it doesn't exist"""
+    def create_baseline_table(self):
+        """Create the baseline table for failure cases"""
         try:
             with sqlite3.connect(self.db_path) as conn:
                 cursor = conn.cursor()
@@ -32,7 +33,6 @@ class TestsDB:
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         test_name TEXT NOT NULL,
                         prompt TEXT NOT NULL,
-                        should_pass BOOLEAN NOT NULL,
                         offender_model TEXT NOT NULL,
                         set_id TEXT NOT NULL,
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -41,6 +41,26 @@ class TestsDB:
                 conn.commit()
         except Exception as e:
             print(f"Error creating baseline table: {str(e)}")
+            raise
+
+    def create_valid_table(self):
+        """Create the valid table for success cases"""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS valid (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        test_name TEXT NOT NULL,
+                        prompt TEXT NOT NULL,
+                        offender_model TEXT NOT NULL,
+                        set_id TEXT NOT NULL,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                ''')
+                conn.commit()
+        except Exception as e:
+            print(f"Error creating valid table: {str(e)}")
             raise
 
     def create_results_table(self):
@@ -78,6 +98,94 @@ class TestsDB:
         except Exception as e:
             print(f"Error storing test result: {str(e)}")
 
+    def store_valid_cases(self, test_name: str, prompts: List[str], set_id: str, offender_model: str):
+        """Store test cases in the valid table"""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                for prompt in prompts:
+                    cursor.execute('''
+                        INSERT INTO valid (test_name, prompt, set_id, offender_model)
+                        VALUES (?, ?, ?, ?)
+                    ''', (test_name, prompt, set_id, offender_model))
+                conn.commit()
+        except Exception as e:
+            print(f"Error storing valid cases: {str(e)}")
+
+    def store_baseline_cases(self, test_name: str, prompts: List[str], set_id: str, offender_model: str):
+        """Store test cases in the baseline table"""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                for prompt in prompts:
+                    cursor.execute('''
+                        INSERT INTO baseline (test_name, prompt, set_id, offender_model)
+                        VALUES (?, ?, ?, ?)
+                    ''', (test_name, prompt, set_id, offender_model))
+                conn.commit()
+        except Exception as e:
+            print(f"Error storing baseline cases: {str(e)}")
+
+    def get_valid_cases(self, test_name: str = None, limit: int = None) -> List[TestCase]:
+        """Retrieve test cases from valid table"""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+
+                conditions = []
+                params = []
+                if test_name:
+                    conditions.append("test_name = ?")
+                    params.append(test_name)
+
+                query = f'''
+                    SELECT *, TRUE as should_pass FROM valid 
+                    {f"WHERE {' AND '.join(conditions)}" if conditions else ""}
+                    ORDER BY RANDOM()
+                    {f"LIMIT {limit}" if limit else ""}
+                '''
+
+                cursor.execute(query, params)
+                rows = cursor.fetchall()
+                columns = [description[0]
+                           for description in cursor.description]
+
+                return [TestCase(**dict(zip(columns, row))) for row in rows]
+
+        except Exception as e:
+            print(f"Error retrieving valid cases: {str(e)}")
+            return []
+
+    def get_baseline_cases(self, test_name: str = None, limit: int = None) -> List[TestCase]:
+        """Retrieve test cases from baseline table"""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+
+                conditions = []
+                params = []
+                if test_name:
+                    conditions.append("test_name = ?")
+                    params.append(test_name)
+
+                query = f'''
+                    SELECT *, FALSE as should_pass FROM baseline 
+                    {f"WHERE {' AND '.join(conditions)}" if conditions else ""}
+                    ORDER BY RANDOM()
+                    {f"LIMIT {limit}" if limit else ""}
+                '''
+
+                cursor.execute(query, params)
+                rows = cursor.fetchall()
+                columns = [description[0]
+                           for description in cursor.description]
+
+                return [TestCase(**dict(zip(columns, row))) for row in rows]
+
+        except Exception as e:
+            print(f"Error retrieving baseline cases: {str(e)}")
+            return []
+
     def get_test_results(self, test_name: str) -> List[dict]:
         """Get all results for a specific test"""
         try:
@@ -89,79 +197,4 @@ class TestsDB:
                 return [dict(row) for row in cursor.fetchall()]
         except Exception as e:
             print(f"Error retrieving test results: {str(e)}")
-            return []
-
-    def store_test_cases(self, test_name: str, test_cases: List[Baseline], set_id: str, offender_model: str):
-        """Store test cases in the SQLite database"""
-        try:
-            with sqlite3.connect(self.db_path) as conn:
-                cursor = conn.cursor()
-                for test_case in test_cases:
-                    cursor.execute('''
-                        INSERT INTO baseline (test_name, prompt, should_pass, set_id, offender_model)
-                        VALUES (?, ?, ?, ?, ?)
-                    ''', (test_name, test_case.prompt, test_case.should_pass, set_id, offender_model))
-                conn.commit()
-        except Exception as e:
-            print(f"Error storing test cases: {str(e)}")
-
-    def get_test_cases(self, test_name: str = None, max_success_cases: int = None, max_failure_cases: int = None) -> List[Baseline]:
-        """Retrieve test cases from the database
-
-        Args:
-            test_name: Optional filter by test name
-            max_success_cases: Optional maximum number of success cases to return
-            max_failure_cases: Optional maximum number of failure cases to return
-        """
-        try:
-            with sqlite3.connect(self.db_path) as conn:
-                cursor = conn.cursor()
-
-                # Build base conditions
-                conditions = []
-                params = []
-                if test_name:
-                    conditions.append("test_name = ?")
-                    params.append(test_name)
-
-                # Get success cases
-                success_query = f'''
-                    SELECT * FROM baseline 
-                    WHERE should_pass = TRUE
-                    {f"AND {' AND '.join(conditions)}" if conditions else ""}
-                    ORDER BY RANDOM()
-                    {f"LIMIT {max_success_cases}" if max_success_cases else ""}
-                '''
-
-                # Get failure cases
-                failure_query = f'''
-                    SELECT * FROM baseline 
-                    WHERE should_pass = FALSE
-                    {f"AND {' AND '.join(conditions)}" if conditions else ""}
-                    ORDER BY RANDOM()
-                    {f"LIMIT {max_failure_cases}" if max_failure_cases else ""}
-                '''
-
-                # Execute both queries and combine results
-                cursor.execute(success_query, params)
-                success_rows = cursor.fetchall()
-
-                cursor.execute(failure_query, params)
-                failure_rows = cursor.fetchall()
-
-                # Get column names
-                columns = [description[0]
-                           for description in cursor.description]
-
-                # Convert rows to Baseline objects
-                all_cases = []
-                all_cases.extend([Baseline(**dict(zip(columns, row)))
-                                 for row in success_rows])
-                all_cases.extend([Baseline(**dict(zip(columns, row)))
-                                 for row in failure_rows])
-
-                return all_cases
-
-        except Exception as e:
-            print(f"Error retrieving test cases: {str(e)}")
             return []

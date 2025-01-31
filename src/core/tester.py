@@ -2,7 +2,7 @@ import openai
 import os
 import uuid
 from typing import List
-from ..models.test_models import Result
+from ..models.result import Result
 from ..utils.db_manager import TestsDB
 
 
@@ -28,34 +28,59 @@ class Tester:
             print(f"Error getting LLM response: {str(e)}")
             return "Error: Failed to get response"
 
-    def run_tests(self, test_name: str, max_success_cases: int, max_failure_cases: int, defender_model: str) -> List[Result]:
+    def run_tests(self, test_name: str, max_valid_cases: int, max_baseline_cases: int, defender_model: str) -> List[Result]:
         """Run specified number of test pairs"""
         results = []
-        test_cases = self.db.get_test_cases(
-            test_name, max_success_cases, max_failure_cases)
+        valid_cases = self.db.get_valid_cases(
+            test_name, max_valid_cases)
+        baseline_cases = self.db.get_baseline_cases(
+            test_name, max_baseline_cases)
 
         # Generate a UUID for this test run
         set_id = str(uuid.uuid4())
 
-        for test_case in test_cases:
+        for valid_case in valid_cases:
             llm_response = self.get_llm_response(
-                test_case.prompt,
+                valid_case.prompt,
                 defender_model
             )
 
             # Store the test result
             self.db.store_test_result(
                 test_name=test_name,
-                prompt=test_case.prompt,
-                should_pass=test_case.should_pass,
+                prompt=valid_case.prompt,
+                should_pass=True,
                 defender_model=defender_model,
                 llm_response=llm_response,
                 set_id=set_id
             )
 
             result = Result(
-                prompt=test_case.prompt,
-                should_pass=test_case.should_pass,
+                prompt=valid_case.prompt,
+                should_pass=True,
+                llm_response=llm_response,
+            )
+            results.append(result)
+
+        for baseline_case in baseline_cases:
+            llm_response = self.get_llm_response(
+                baseline_case.prompt,
+                defender_model
+            )
+
+            # Store the test result
+            self.db.store_test_result(
+                test_name=test_name,
+                prompt=baseline_case.prompt,
+                should_pass=False,
+                defender_model=defender_model,
+                llm_response=llm_response,
+                set_id=set_id
+            )
+
+            result = Result(
+                prompt=baseline_case.prompt,
+                should_pass=False,
                 llm_response=llm_response,
             )
             results.append(result)

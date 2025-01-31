@@ -13,10 +13,10 @@ def main():
     for test in tests:
         test_name = test["test_name"]
         rule = test["rule"]
-        generator.generate_success_cases(
+        generator.generate_valid_cases(
             test_name, rule, num_success_cases, offender_model)
         print(f"Generated {num_success_cases} success cases for {test_name}")
-        generator.generate_failure_cases(
+        generator.generate_baseline_cases(
             test_name, rule, num_failure_cases, offender_model)
         print(f"Generated {num_failure_cases} failure cases for {test_name}")
 
