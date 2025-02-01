@@ -5,7 +5,7 @@ from src.models.enhancement_technique import EnhancementTechnique
 def main():
     # Convert string to enum
     technique = EnhancementTechnique.CODING_TASKS
-    test_name = "S1"
+    test_name = "S2"
 
     # Create enhancer for this technique
     enhancer = Enhancer()
