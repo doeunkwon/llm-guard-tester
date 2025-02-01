@@ -36,7 +36,6 @@ class TestsDB:
                         prompt TEXT NOT NULL,
                         offender_model TEXT NOT NULL,
                         set_id TEXT NOT NULL,
-                        enhanced BOOLEAN DEFAULT FALSE,
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                     )
                 ''')
@@ -143,8 +142,8 @@ class TestsDB:
                 cursor = conn.cursor()
                 for prompt in prompts:
                     cursor.execute('''
-                        INSERT INTO baseline (test_name, prompt, set_id, offender_model, enhanced)
-                        VALUES (?, ?, ?, ?, FALSE)
+                        INSERT INTO baseline (test_name, prompt, set_id, offender_model)
+                        VALUES (?, ?, ?, ?)
                     ''', (test_name, prompt, set_id, offender_model))
                 conn.commit()
         except Exception as e:
@@ -194,7 +193,7 @@ class TestsDB:
             print(f"Error retrieving valid cases: {str(e)}")
             return []
 
-    def get_baseline_cases(self, test_name: str = None, limit: int = None, enhanced: bool = None) -> List[TestCase]:
+    def get_baseline_cases(self, test_name: str = None, limit: int = None) -> List[TestCase]:
         """Retrieve test cases from baseline table"""
         try:
             with sqlite3.connect(self.db_path) as conn:
@@ -205,9 +204,6 @@ class TestsDB:
                 if test_name:
                     conditions.append("test_name = ?")
                     params.append(test_name)
-                if enhanced is not None:
-                    conditions.append("enhanced = ?")
-                    params.append(enhanced)
 
                 query = f'''
                     SELECT * FROM baseline 

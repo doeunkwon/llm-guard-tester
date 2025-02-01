@@ -16,10 +16,10 @@ class Enhancer:
         )
         self.db = TestsDB()
 
-    def enhance(self, technique: EnhancementTechnique):
-        """Process unenhanced baseline attacks and apply enhancement"""
-        # Get unenhanced baseline cases
-        baseline_cases = self.db.get_baseline_cases(enhanced=False)
+    def enhance(self, technique: EnhancementTechnique, test_name: str):
+        """Process baseline attacks for a specific test and apply enhancement"""
+        # Get all baseline cases for the test
+        baseline_cases = self.db.get_baseline_cases(test_name=test_name)
 
         for case in baseline_cases:
             enhanced_prompts = []
@@ -39,9 +39,6 @@ class Enhancer:
                     case.offender_model,
                     case.id  # Pass the baseline_id
                 )
-
-            # Mark baseline case as enhanced using the database id
-            self.db.mark_baseline_as_enhanced(case.id)
 
     def _enhance_coding(self, prompt: str) -> List[str]:
         """Transform prompt into coding-related variants that are more likely to bypass filters"""
