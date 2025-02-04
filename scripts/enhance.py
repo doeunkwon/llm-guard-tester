@@ -1,16 +1,20 @@
 from src.core.enhancer import Enhancer
 from src.models.enhancement_technique import EnhancementTechnique
+from config.rules import LLAMA_GUARD_RULES
 
 
 def main():
-    # Convert string to enum
-    technique = EnhancementTechnique.CODING_TASKS
-    test_name = "S2"
-
-    # Create enhancer for this technique
+    technique = EnhancementTechnique.ROLE_PLAYING
     enhancer = Enhancer()
 
-    enhancer.enhance(technique, test_name)
+    tests = LLAMA_GUARD_RULES
+    for test in tests:
+        test_name = test["test_name"]
+        enhancer.enhance(technique, test_name)
+        print(f"Enhanced {test_name}")
+
+    # test_name = "S1"
+    # enhancer.enhance(technique, test_name)
 
 
 if __name__ == "__main__":
