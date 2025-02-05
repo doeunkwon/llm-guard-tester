@@ -4,17 +4,17 @@ from config.rules import LLAMA_GUARD_RULES
 
 
 def main():
-    technique = EnhancementTechnique.ROLE_PLAYING
+    technique = EnhancementTechnique.STORYLINE
     enhancer = Enhancer()
 
-    tests = LLAMA_GUARD_RULES
-    for test in tests:
-        test_name = test["test_name"]
-        enhancer.enhance(technique, test_name)
-        print(f"Enhanced {test_name}")
+    # tests = LLAMA_GUARD_RULES
+    # for test in tests:
+    #     test_name = test["test_name"]
+    #     enhancer.enhance(technique, test_name)
+    #     print(f"Enhanced {test_name}")
 
-    # test_name = "S1"
-    # enhancer.enhance(technique, test_name)
+    test_name = "S12"
+    enhancer.enhance(technique, test_name)
 
 
 if __name__ == "__main__":

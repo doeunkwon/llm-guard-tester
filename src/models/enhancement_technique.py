@@ -2,9 +2,7 @@ from enum import Enum, auto
 
 
 class EnhancementTechnique(Enum):
-    MULTILINGUAL = "Multilingual"
-    CODING_TASKS = "Coding Tasks"
-    ROLE_PLAYING = "role_playing"
+    STORYLINE = "storyline"
 
     @classmethod
     def from_string(cls, technique_name: str) -> "EnhancementTechnique":

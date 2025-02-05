@@ -4,7 +4,7 @@ from config.rules import LLAMA_GUARD_RULES
 
 def main():
     num_success_cases = 0
-    num_failure_cases = 2
+    num_failure_cases = 3
     offender_model = "gpt-4o"
 
     generator = Generator()
