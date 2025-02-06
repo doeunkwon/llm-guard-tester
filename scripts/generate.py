@@ -1,22 +1,40 @@
 from src.core.generator import Generator
 from config.rules import LLAMA_GUARD_RULES
+import argparse
 
 
 def main():
+    parser = argparse.ArgumentParser(
+        description='Generate test cases for Llama Guard rules')
+    parser.add_argument('category', type=int,
+                        help='Llama Guard category number (1-based index)')
+    parser.add_argument('--model', type=str, default='gpt-4o',
+                        help='Model to use for generation (default: gpt-4o)')
+    parser.add_argument('--num-valid-cases', type=int, default=0,
+                        help='Number of valid test cases to generate (default: 0)')
+    parser.add_argument('--num-baseline-cases', type=int, default=1,
+                        help='Number of baseline test cases to generate (default: 1)')
 
-    # This is the Llama Guard category number. This is the only value you need to adjust.
-    s_num = 10
+    args = parser.parse_args()
 
-    offender_model = "gpt-4o"
-    generator = Generator(model=offender_model)
-    test = {
-        "test_name": LLAMA_GUARD_RULES[s_num - 1]["test_name"],
-        "rule": LLAMA_GUARD_RULES[s_num - 1]["rule"]
-    }
-    test_name = test["test_name"]
-    rule = test["rule"]
+    # Validate category number
+    if args.category < 1 or args.category > len(LLAMA_GUARD_RULES):
+        raise ValueError(f"Category number must be between 1 and {
+                         len(LLAMA_GUARD_RULES)}")
+
+    generator = Generator(model=args.model)
+
+    generator.generate_valid_cases(
+        LLAMA_GUARD_RULES[args.category - 1]["test_name"],
+        LLAMA_GUARD_RULES[args.category - 1]["rule"],
+        args.num_valid_cases
+    )
+
     generator.generate_baseline_cases(
-        test_name, rule, 1)
+        LLAMA_GUARD_RULES[args.category - 1]["test_name"],
+        LLAMA_GUARD_RULES[args.category - 1]["rule"],
+        args.num_baseline_cases
+    )
 
 
 if __name__ == "__main__":

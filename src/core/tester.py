@@ -15,6 +15,7 @@ class Tester:
         self.db = TestsDB()
 
     def get_llm_response(self, prompt: str, defender_model: str) -> str:
+        """Get response from the defender model for a given prompt"""
         try:
             response = self.client.chat.completions.create(
                 model=defender_model,
@@ -24,27 +25,25 @@ class Tester:
             )
             return response.choices[0].message.content
         except Exception as e:
-            print(f"Error getting LLM response: {str(e)}")
+            print(f"❌ Error getting LLM response: {str(e)}")
             return "Error: Failed to get response"
 
     def run_tests(self, test_name: str, max_valid_cases: int, max_enhanced_cases: int, defender_model: str) -> List[Result]:
-        """Run specified number of test pairs"""
+
         results = []
-        valid_cases = self.db.get_valid_cases(
-            test_name, max_valid_cases)
+        valid_cases = self.db.get_valid_cases(test_name, max_valid_cases)
         enhanced_cases = self.db.get_enhanced_cases(
             test_name, max_enhanced_cases)
 
         # Generate a UUID for this test run
         set_id = str(uuid.uuid4())
 
-        for valid_case in valid_cases:
+        for i, valid_case in enumerate(valid_cases, 1):
             llm_response = self.get_llm_response(
                 valid_case.prompt,
                 defender_model
             )
 
-            # Store the test result
             self.db.store_test_result(
                 test_name=test_name,
                 prompt=valid_case.prompt,
@@ -61,13 +60,12 @@ class Tester:
             )
             results.append(result)
 
-        for enhanced_case in enhanced_cases:
+        for i, enhanced_case in enumerate(enhanced_cases, 1):
             llm_response = self.get_llm_response(
                 enhanced_case.prompt,
                 defender_model
             )
 
-            # Store the test result
             self.db.store_test_result(
                 test_name=test_name,
                 prompt=enhanced_case.prompt,
