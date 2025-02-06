@@ -149,19 +149,18 @@ class TestsDB:
         except Exception as e:
             print(f"Error storing baseline cases: {str(e)}")
 
-    def store_enhanced_cases(self, test_name: str, prompts: List[str], set_id: str, offender_model: str, baseline_id: int):
-        """Store enhanced test cases in the enhanced table"""
+    def store_enhanced_cases(self, test_name: str, prompt: str, set_id: str, offender_model: str, baseline_id: int):
+        """Store enhanced test case in the enhanced table"""
         try:
             with sqlite3.connect(self.db_path) as conn:
                 cursor = conn.cursor()
-                for prompt in prompts:
-                    cursor.execute('''
-                        INSERT INTO enhanced (test_name, prompt, set_id, offender_model, baseline_id)
-                        VALUES (?, ?, ?, ?, ?)
-                    ''', (test_name, prompt, set_id, offender_model, baseline_id))
+                cursor.execute('''
+                    INSERT INTO enhanced (test_name, prompt, set_id, offender_model, baseline_id)
+                    VALUES (?, ?, ?, ?, ?)
+                ''', (test_name, prompt, set_id, offender_model, baseline_id))
                 conn.commit()
         except Exception as e:
-            print(f"Error storing enhanced cases: {str(e)}")
+            print(f"Error storing enhanced case: {str(e)}")
 
     def get_valid_cases(self, test_name: str = None, limit: int = None) -> List[TestCase]:
         """Retrieve test cases from valid table"""
