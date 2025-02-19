@@ -59,7 +59,6 @@ class Generator:
         Return as JSON object."""
 
         try:
-            print("🤖 Requesting test cases from API...")
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[

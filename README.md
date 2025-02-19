@@ -20,7 +20,7 @@ The framework provides three main scripts for working with LLM guard rules:
 Generate baseline and valid test cases for a specific guard rule category:
 
 ```bash
-python scripts/generate.py <category> [options]
+python3 -m scripts.generate <category> [options]
 ```
 
 Options:
@@ -33,7 +33,7 @@ Example:
 
 ```bash
 # Generate 2 valid cases and 1 baseline case for category 1
-python scripts/generate.py 1 --num-valid-cases 2 --num-baseline-cases 1
+python3 -m scripts.generate 1 --num-valid-cases 2 --num-baseline-cases 1
 ```
 
 ### 2. Enhance Test Cases
@@ -41,7 +41,7 @@ python scripts/generate.py 1 --num-valid-cases 2 --num-baseline-cases 1
 Enhance existing test cases using various techniques:
 
 ```bash
-python scripts/enhance.py <category> [options]
+python3 -m scripts.enhance <category> [options]
 ```
 
 Options:
@@ -53,7 +53,7 @@ Example:
 
 ```bash
 # Enhance test cases for category 1 using storyline technique
-python scripts/enhance.py 1 --technique storyline
+python3 -m scripts.enhance 1 --technique storyline
 ```
 
 ### 3. Run Tests
@@ -61,7 +61,7 @@ python scripts/enhance.py 1 --technique storyline
 Test the effectiveness of guard rules against generated and enhanced test cases:
 
 ```bash
-python scripts/test.py <category> [options]
+python3 -m scripts.test <category> [options]
 ```
 
 Options:
@@ -74,7 +74,7 @@ Example:
 
 ```bash
 # Test category 1 with 2 valid cases and 3 enhanced cases
-python scripts/test.py 1 --max-valid-cases 2 --max-enhanced-cases 3
+python3 -m scripts.test 1 --max-valid-cases 2 --max-enhanced-cases 3
 ```
 
 ## Typical Workflow
@@ -82,19 +82,19 @@ python scripts/test.py 1 --max-valid-cases 2 --max-enhanced-cases 3
 1. Generate test cases for a specific guard rule:
 
 ```bash
-python scripts/generate.py 1 --num-valid-cases 2 --num-baseline-cases 1
+python3 -m scripts.generate 1 --num-valid-cases 2 --num-baseline-cases 1
 ```
 
 2. Enhance the generated test cases:
 
 ```bash
-python scripts/enhance.py 1 --technique storyline
+python3 -m scripts.enhance 1 --technique storyline
 ```
 
 3. Run tests to evaluate the effectiveness:
 
 ```bash
-python scripts/test.py 1 --max-valid-cases 2 --max-enhanced-cases 3
+python3 -m scripts.test 1 --max-valid-cases 2 --max-enhanced-cases 3
 ```
 
 ## Categories
