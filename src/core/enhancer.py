@@ -2,7 +2,7 @@ import openai
 import os
 from ..utils.db_manager import TestsDB
 from ..models.enhancement_technique import EnhancementTechnique
-from .enhancer_helper import storyline
+from .enhancer_helper import storyline, coding
 
 
 class Enhancer:
@@ -28,5 +28,7 @@ class Enhancer:
             match technique:
                 case EnhancementTechnique.STORYLINE:
                     storyline.process_storyline(case, self.db)
+                case EnhancementTechnique.CODING:
+                    coding.process_coding(case, self.db)
 
         print("\n✨ Enhancement process completed!")

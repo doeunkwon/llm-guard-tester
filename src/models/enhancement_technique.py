@@ -3,6 +3,7 @@ from enum import Enum, auto
 
 class EnhancementTechnique(Enum):
     STORYLINE = "storyline"
+    CODING = "coding"
 
     @classmethod
     def from_string(cls, technique_name: str) -> "EnhancementTechnique":

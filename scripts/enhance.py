@@ -15,7 +15,7 @@ def main():
     parser.add_argument('--model', type=str, default='gpt-4o-mini',
                         help='Model to use for enhancement (default: gpt-4o-mini)')
     parser.add_argument('--technique', type=str, default='storyline',
-                        choices=['storyline'],
+                        choices=['storyline', 'coding'],
                         help='Enhancement technique to use (default: storyline)')
 
     args = parser.parse_args()
