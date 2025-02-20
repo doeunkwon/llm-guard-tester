@@ -99,6 +99,8 @@ class TestsDB:
                         offender_model TEXT NOT NULL,
                         set_id TEXT NOT NULL,
                         baseline_id INTEGER NOT NULL,
+                        technique TEXT NOT NULL,
+                        score INTEGER NOT NULL,
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                         FOREIGN KEY (baseline_id) REFERENCES baseline(id)
                     )
@@ -149,15 +151,15 @@ class TestsDB:
         except Exception as e:
             print(f"Error storing baseline cases: {str(e)}")
 
-    def store_enhanced_cases(self, test_name: str, prompt: str, set_id: str, offender_model: str, baseline_id: int):
+    def store_enhanced_cases(self, test_name: str, prompt: str, set_id: str, offender_model: str, baseline_id: int, technique: str, score: int):
         """Store enhanced test case in the enhanced table"""
         try:
             with sqlite3.connect(self.db_path) as conn:
                 cursor = conn.cursor()
                 cursor.execute('''
-                    INSERT INTO enhanced (test_name, prompt, set_id, offender_model, baseline_id)
-                    VALUES (?, ?, ?, ?, ?)
-                ''', (test_name, prompt, set_id, offender_model, baseline_id))
+                    INSERT INTO enhanced (test_name, prompt, set_id, offender_model, baseline_id, technique, score)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                ''', (test_name, prompt, set_id, offender_model, baseline_id, technique, score))
                 conn.commit()
         except Exception as e:
             print(f"Error storing enhanced case: {str(e)}")
