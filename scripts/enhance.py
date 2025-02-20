@@ -1,12 +1,12 @@
 from src.core.enhancer import Enhancer
 from src.models.enhancement_technique import EnhancementTechnique
-from config.rules import LLAMA_GUARD_RULES, CUSTOM_RULES, EU_AI_ACT_RULES
+from config.rules import LLAMA_GUARD_RULES, TESLA_BUSINESS_ETHICS_RULES, EU_AI_ACT_RULES
 import argparse
 
 
 def main():
 
-    rules = EU_AI_ACT_RULES
+    rules = TESLA_BUSINESS_ETHICS_RULES
 
     parser = argparse.ArgumentParser(
         description='Enhance test cases for Llama Guard rules')
